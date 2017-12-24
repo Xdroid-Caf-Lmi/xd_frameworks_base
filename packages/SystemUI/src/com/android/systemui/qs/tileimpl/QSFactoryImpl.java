@@ -33,6 +33,7 @@ import com.android.systemui.qs.tiles.CastTile;
 import com.android.systemui.qs.tiles.CellularTile;
 import com.android.systemui.qs.tiles.CaffeineTile;
 import com.android.systemui.qs.tiles.ColorInversionTile;
+import com.android.systemui.qs.tiles.CPUInfoTile;
 import com.android.systemui.qs.tiles.DataSaverTile;
 import com.android.systemui.qs.tiles.DataSwitchTile;
 import com.android.systemui.qs.tiles.DndTile;
@@ -91,6 +92,7 @@ public class QSFactoryImpl implements QSFactory {
     private final Provider<VolumeTile> mVolumeTileProvider;
     private final Provider<RebootTile> mRebootTileProvider;
     private final Provider<CaffeineTile> mCaffeineTileProvider;
+    private final Provider<CPUInfoTile> mCPUInfoTileProvider;
     private final Provider<FPSInfoTile> mFPSInfoTileProvider;
 
     private final Lazy<QSHost> mQsHostLazy;
@@ -123,6 +125,7 @@ public class QSFactoryImpl implements QSFactory {
             Provider<VolumeTile> volumeTileProvider,
             Provider<RebootTile> rebootTileProvider,
             Provider<CaffeineTile> caffeineTileProvider,
+            Provider<CPUInfoTile> cpuInfoTileProvider,
             Provider<FPSInfoTile> fpsInfoTileProvider) {
         mQsHostLazy = qsHostLazy;
         mWifiTileProvider = wifiTileProvider;
@@ -151,6 +154,7 @@ public class QSFactoryImpl implements QSFactory {
         mVolumeTileProvider = volumeTileProvider;
         mRebootTileProvider = rebootTileProvider;
         mCaffeineTileProvider = caffeineTileProvider;
+        mCPUInfoTileProvider = cpuInfoTileProvider;
         mFPSInfoTileProvider = fpsInfoTileProvider;
     }
 
@@ -215,6 +219,8 @@ public class QSFactoryImpl implements QSFactory {
                 return mRebootTileProvider.get();
             case "caffeine":
                 return mCaffeineTileProvider.get();
+            case "cpuinfo":
+                return mCPUInfoTileProvider.get();
             case "fpsinfo":
                 return mFPSInfoTileProvider.get();
         }
