@@ -5153,6 +5153,12 @@ public final class Settings {
         public static final String QS_TILE_TITLE_VISIBILITY = "qs_tile_title_visibility";
 
         /**
+         * Control whether the process CPU info meter should be shown.
+         * @hide
+         */
+        public static final String SHOW_CPU_OVERLAY = "show_cpu_overlay";
+        
+        /**
          * @hide
          */
         public static final String SHOW_FPS_OVERLAY = "show_fps_overlay";
