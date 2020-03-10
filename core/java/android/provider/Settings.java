@@ -5153,6 +5153,11 @@ public final class Settings {
         public static final String QS_TILE_TITLE_VISIBILITY = "qs_tile_title_visibility";
 
         /**
+         * @hide
+         */
+        public static final String SHOW_FPS_OVERLAY = "show_fps_overlay";
+        
+        /**
          * These are all public system settings
          *
          * @hide

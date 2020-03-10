@@ -25,5 +25,8 @@
     <!-- Shows the required view for in-display fingerprint -->
     <bool name="config_supportsInDisplayFingerprint">false</bool>
 
+    <!-- FPSInfoService FPS node file path -->
+    <string name="config_fpsInfoSysNode" translatable="false"></string>
+
 </resources>
 
