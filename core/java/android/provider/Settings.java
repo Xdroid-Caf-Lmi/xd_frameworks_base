@@ -5127,6 +5127,12 @@ public final class Settings {
          * @hide
          */
         public static final String QS_COLUMNS_LANDSCAPE = "qs_columns_landscape";
+        
+        /**
+         * Whether to show media player in QS
+         * @hide
+         */
+        public static final String QS_MEDIA_PLAYER = "qs_media_player";
 
         /**
          * Volume panel on left
