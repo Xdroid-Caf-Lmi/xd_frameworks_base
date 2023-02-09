@@ -15,10 +15,8 @@
  */
 package com.android.server.devicepolicy;
 
-import android.accounts.Account;
 import android.app.admin.IDevicePolicyManager;
 import android.content.ComponentName;
-import android.os.UserHandle;
 
 import com.android.server.SystemService;
 
@@ -87,10 +85,5 @@ abstract class BaseIDevicePolicyManager extends IDevicePolicyManager.Stub {
 
     public boolean canProfileOwnerResetPasswordWhenLocked(int userId) {
         return false;
-    }
-
-    public void finalizeWorkProfileProvisioning(
-            UserHandle managedProfileUser, Account migratedAccount) {
-
     }
 }

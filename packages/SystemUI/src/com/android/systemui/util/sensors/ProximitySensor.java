@@ -257,9 +257,10 @@ public class ProximitySensor implements ThresholdSensor {
             return;
         }
         if (mLastEvent != null) {
+            ThresholdSensorEvent lastEvent = mLastEvent;  // Listeners can null out mLastEvent.
             List<ThresholdSensor.Listener> listeners = new ArrayList<>(mListeners);
             listeners.forEach(proximitySensorListener ->
-                    proximitySensorListener.onThresholdCrossed(mLastEvent));
+                    proximitySensorListener.onThresholdCrossed(lastEvent));
         }
 
         mAlerting.set(false);
@@ -318,22 +319,15 @@ public class ProximitySensor implements ThresholdSensor {
         private final ProximitySensor mSensor;
         private final DelayableExecutor mDelayableExecutor;
         private List<Consumer<Boolean>> mCallbacks = new ArrayList<>();
+        private final ThresholdSensor.Listener mListener;
+        private final AtomicBoolean mRegistered = new AtomicBoolean();
 
         @Inject
-        public ProximityCheck(ProximitySensor sensor, DelayableExecutor delayableExecutor) {
+        public ProximityCheck(ProximitySensor sensor, @Main DelayableExecutor delayableExecutor) {
             mSensor = sensor;
             mSensor.setTag("prox_check");
             mDelayableExecutor = delayableExecutor;
-            mSensor.pause();
-            ThresholdSensor.Listener listener = proximityEvent -> {
-                mCallbacks.forEach(
-                        booleanConsumer ->
-                                booleanConsumer.accept(
-                                        proximityEvent == null ? null : proximityEvent.getBelow()));
-                mCallbacks.clear();
-                mSensor.pause();
-            };
-            mSensor.register(listener);
+            mListener = this::onProximityEvent;
         }
 
         /** Set a descriptive tag for the sensors registration. */
@@ -343,8 +337,8 @@ public class ProximitySensor implements ThresholdSensor {
 
         @Override
         public void run() {
-            mSensor.pause();
-            mSensor.alertListeners();
+            unregister();
+            onProximityEvent(null);
         }
 
         /**
@@ -355,10 +349,25 @@ public class ProximitySensor implements ThresholdSensor {
                 callback.accept(null);
             }
             mCallbacks.add(callback);
-            if (!mSensor.isRegistered()) {
-                mSensor.resume();
+            if (!mRegistered.getAndSet(true)) {
+                mSensor.register(mListener);
                 mDelayableExecutor.executeDelayed(this, timeoutMs);
             }
+        }
+
+        private void unregister() {
+            mSensor.unregister(mListener);
+            mRegistered.set(false);
+        }
+
+        private void onProximityEvent(ThresholdSensorEvent proximityEvent) {
+            mCallbacks.forEach(
+                    booleanConsumer ->
+                            booleanConsumer.accept(
+                                    proximityEvent == null ? null : proximityEvent.getBelow()));
+            mCallbacks.clear();
+            unregister();
+            mRegistered.set(false);
         }
     }
 

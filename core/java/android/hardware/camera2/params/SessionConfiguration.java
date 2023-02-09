@@ -143,7 +143,13 @@ public final class SessionConfiguration implements Parcelable {
             new Parcelable.Creator<SessionConfiguration> () {
         @Override
         public SessionConfiguration createFromParcel(Parcel source) {
-            return new SessionConfiguration(source);
+            try {
+                SessionConfiguration sessionConfiguration = new SessionConfiguration(source);
+                return sessionConfiguration;
+            } catch (Exception e) {
+                Log.e(TAG, "Exception creating SessionConfiguration from parcel", e);
+                return null;
+            }
         }
 
         @Override

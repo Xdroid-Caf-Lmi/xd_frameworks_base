@@ -2957,7 +2957,7 @@ public final class InputMethodManager {
     @UnsupportedAppUsage
     public int getInputMethodWindowVisibleHeight() {
         try {
-            return mService.getInputMethodWindowVisibleHeight(mClient);
+            return mService.getInputMethodWindowVisibleHeight();
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }

@@ -15,22 +15,14 @@
  */
 package com.android.server.notification;
 
-import static android.os.UserHandle.USER_ALL;
 import static android.os.UserHandle.USER_CURRENT;
-import static android.os.UserHandle.USER_NULL;
 import static android.os.UserHandle.USER_SYSTEM;
 import static android.service.notification.NotificationListenerService.REASON_CANCEL;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.junit.Assert.fail;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.Mockito.when;
-
 import android.app.Notification;
 import android.os.UserHandle;
-import android.os.UserManager;
 import android.service.notification.StatusBarNotification;
 import android.test.suitebuilder.annotation.SmallTest;
 
@@ -41,7 +33,6 @@ import com.android.server.UiServiceTestCase;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.util.ArrayList;
@@ -54,8 +45,6 @@ public class ArchiveTest extends UiServiceTestCase {
     private static final int SIZE = 5;
 
     private NotificationManagerService.Archive mArchive;
-    @Mock
-    private UserManager mUm;
 
     @Before
     public void setUp() {
@@ -64,9 +53,6 @@ public class ArchiveTest extends UiServiceTestCase {
         mArchive = new NotificationManagerService.Archive(SIZE);
         mArchive.updateHistoryEnabled(USER_SYSTEM, true);
         mArchive.updateHistoryEnabled(USER_CURRENT, true);
-
-        when(mUm.getProfileIds(anyInt(), anyBoolean())).thenReturn(
-                new int[] {USER_CURRENT, USER_SYSTEM});
     }
 
     private StatusBarNotification getNotification(String pkg, int id, UserHandle user) {
@@ -78,6 +64,7 @@ public class ArchiveTest extends UiServiceTestCase {
                 pkg, pkg, id, null, 0, 0, n, user, null, System.currentTimeMillis());
     }
 
+
     @Test
     public void testRecordAndRead() {
         List<String> expected = new ArrayList<>();
@@ -88,26 +75,10 @@ public class ArchiveTest extends UiServiceTestCase {
             mArchive.record(sbn, REASON_CANCEL);
         }
 
-        List<StatusBarNotification> actual = Arrays.asList(mArchive.getArray(mUm, SIZE, true));
+        List<StatusBarNotification> actual = Arrays.asList(mArchive.getArray(SIZE, true));
         assertThat(actual).hasSize(expected.size());
         for (StatusBarNotification sbn : actual) {
             assertThat(expected).contains(sbn.getKey());
-        }
-    }
-
-    @Test
-    public void testCrossUser() {
-        mArchive.record(getNotification("pkg", 1, UserHandle.of(USER_SYSTEM)), REASON_CANCEL);
-        mArchive.record(getNotification("pkg", 2, UserHandle.of(USER_CURRENT)), REASON_CANCEL);
-        mArchive.record(getNotification("pkg", 3, UserHandle.of(USER_ALL)), REASON_CANCEL);
-        mArchive.record(getNotification("pkg", 4, UserHandle.of(USER_NULL)), REASON_CANCEL);
-
-        List<StatusBarNotification> actual = Arrays.asList(mArchive.getArray(mUm, SIZE, true));
-        assertThat(actual).hasSize(3);
-        for (StatusBarNotification sbn : actual) {
-            if (sbn.getUserId() == USER_NULL) {
-                fail("leaked notification from wrong user");
-            }
         }
     }
 
@@ -122,8 +93,7 @@ public class ArchiveTest extends UiServiceTestCase {
             }
         }
 
-        List<StatusBarNotification> actual = Arrays.asList(
-                mArchive.getArray(mUm, (SIZE * 2), true));
+        List<StatusBarNotification> actual = Arrays.asList(mArchive.getArray((SIZE * 2), true));
         assertThat(actual).hasSize(expected.size());
         for (StatusBarNotification sbn : actual) {
             assertThat(expected).contains(sbn.getKey());
@@ -143,7 +113,7 @@ public class ArchiveTest extends UiServiceTestCase {
             }
         }
 
-        List<StatusBarNotification> actual = Arrays.asList(mArchive.getArray(mUm, SIZE, true));
+        List<StatusBarNotification> actual = Arrays.asList(mArchive.getArray(SIZE, true));
         assertThat(actual).hasSize(expected.size());
         for (StatusBarNotification sbn : actual) {
             assertThat(expected).contains(sbn.getKey());
@@ -164,7 +134,7 @@ public class ArchiveTest extends UiServiceTestCase {
         }
         mArchive.updateHistoryEnabled(USER_CURRENT, false);
 
-        List<StatusBarNotification> actual = Arrays.asList(mArchive.getArray(mUm, SIZE, true));
+        List<StatusBarNotification> actual = Arrays.asList(mArchive.getArray(SIZE, true));
         assertThat(actual).hasSize(expected.size());
         for (StatusBarNotification sbn : actual) {
             assertThat(expected).contains(sbn.getKey());

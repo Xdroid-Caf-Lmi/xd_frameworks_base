@@ -26,10 +26,13 @@ import android.content.ServiceConnection;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.IInterface;
-import android.os.Looper;
 import android.os.RemoteException;
 import android.os.UserHandle;
+import android.text.TextUtils;
+import android.util.DebugUtils;
 import android.util.Log;
+
+import com.android.internal.util.function.pooled.PooledLambda;
 
 import java.io.PrintWriter;
 import java.util.ArrayDeque;
@@ -43,6 +46,7 @@ import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+
 
 /**
  * Takes care of managing a {@link ServiceConnection} and auto-disconnecting from the service upon
@@ -216,7 +220,6 @@ public interface ServiceConnector<I extends IInterface> {
         private final @NonNull Queue<Job<I, ?>> mQueue = this;
         private final @NonNull List<CompletionAwareJob<I, ?>> mUnfinishedJobs = new ArrayList<>();
 
-        private final @NonNull Handler mMainHandler = new Handler(Looper.getMainLooper());
         private final @NonNull ServiceConnection mServiceConnection = this;
         private final @NonNull Runnable mTimeoutDisconnect = this;
 
@@ -247,8 +250,9 @@ public interface ServiceConnector<I extends IInterface> {
          *                          {@link IInterface}.
          *                          Typically this is {@code IMyInterface.Stub::asInterface}
          */
-        public Impl(@NonNull Context context, @NonNull Intent intent, int bindingFlags,
-                @UserIdInt int userId, @Nullable Function<IBinder, I> binderAsInterface) {
+        public Impl(@NonNull Context context, @NonNull Intent intent,
+                @Context.BindServiceFlags int bindingFlags, @UserIdInt int userId,
+                @Nullable Function<IBinder, I> binderAsInterface) {
             mContext = context;
             mIntent = intent;
             mBindingFlags = bindingFlags;
@@ -260,7 +264,7 @@ public interface ServiceConnector<I extends IInterface> {
          * {@link Handler} on which {@link Job}s will be called
          */
         protected Handler getJobHandler() {
-            return mMainHandler;
+            return Handler.getMain();
         }
 
         /**
@@ -387,7 +391,8 @@ public interface ServiceConnector<I extends IInterface> {
 
         private boolean enqueue(@NonNull Job<I, ?> job) {
             cancelTimeout();
-            return getJobHandler().post(() -> enqueueJobThread(job));
+            return getJobHandler().sendMessage(PooledLambda.obtainMessage(
+                    ServiceConnector.Impl::enqueueJobThread, this, job));
         }
 
         void enqueueJobThread(@NonNull Job<I, ?> job) {
@@ -417,7 +422,7 @@ public interface ServiceConnector<I extends IInterface> {
             if (DEBUG) {
                 logTrace();
             }
-            mMainHandler.removeCallbacks(mTimeoutDisconnect);
+            Handler.getMain().removeCallbacks(mTimeoutDisconnect);
         }
 
         void completeExceptionally(@NonNull Job<?, ?> job, @NonNull Throwable ex) {
@@ -481,7 +486,7 @@ public interface ServiceConnector<I extends IInterface> {
             }
             long timeout = getAutoDisconnectTimeoutMs();
             if (timeout > 0) {
-                mMainHandler.postDelayed(mTimeoutDisconnect, timeout);
+                Handler.getMain().postDelayed(mTimeoutDisconnect, timeout);
             } else if (DEBUG) {
                 Log.i(LOG_TAG, "Not scheduling unbind for permanently bound " + this);
             }
@@ -497,7 +502,7 @@ public interface ServiceConnector<I extends IInterface> {
                 logTrace();
             }
             mUnbinding = true;
-            getJobHandler().post(this::unbindJobThread);
+            getJobHandler().sendMessage(PooledLambda.obtainMessage(Impl::unbindJobThread, this));
         }
 
         void unbindJobThread() {
@@ -654,7 +659,10 @@ public interface ServiceConnector<I extends IInterface> {
         }
 
         private void logTrace() {
-            Log.i(LOG_TAG, "See stacktrace", new Throwable());
+            Log.i(LOG_TAG,
+                    TextUtils.join(" -> ",
+                            DebugUtils.callersWithin(ServiceConnector.class, /* offset= */ 1))
+                    + "(" + this + ")");
         }
 
         /**

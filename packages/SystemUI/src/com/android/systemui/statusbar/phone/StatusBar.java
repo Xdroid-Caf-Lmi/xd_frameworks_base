@@ -3368,10 +3368,6 @@ public class StatusBar extends SystemUI implements DemoMode,
     }
 
     boolean updateIsKeyguard() {
-        return updateIsKeyguard(false /* force */);
-    }
-
-    boolean updateIsKeyguard(boolean force) {
         boolean wakeAndUnlocking = mBiometricUnlockController.getMode()
                 == BiometricUnlockController.MODE_WAKE_AND_UNLOCK;
 
@@ -3394,7 +3390,7 @@ public class StatusBar extends SystemUI implements DemoMode,
                 showKeyguardImpl();
             }
         } else {
-            return hideKeyguardImpl(force);
+            return hideKeyguardImpl();
         }
         return false;
     }
@@ -3525,11 +3521,11 @@ public class StatusBar extends SystemUI implements DemoMode,
     /**
      * @return true if we would like to stay in the shade, false if it should go away entirely
      */
-    public boolean hideKeyguardImpl(boolean force) {
+    public boolean hideKeyguardImpl() {
         mIsKeyguard = false;
         Trace.beginSection("StatusBar#hideKeyguard");
         boolean staying = mStatusBarStateController.leaveOpenOnKeyguardHide();
-        if (!(mStatusBarStateController.setState(StatusBarState.SHADE, force))) {
+        if (!(mStatusBarStateController.setState(StatusBarState.SHADE))) {
             //TODO: StatusBarStateController should probably know about hiding the keyguard and
             // notify listeners.
 
@@ -3965,8 +3961,7 @@ public class StatusBar extends SystemUI implements DemoMode,
                 // is correct.
                 mHandler.post(() -> onCameraLaunchGestureDetected(mLastCameraLaunchSource));
             }
-            // When finished going to sleep, force the status bar state to avoid stale state.
-            updateIsKeyguard(true /* force */);
+            updateIsKeyguard();
         }
 
         @Override

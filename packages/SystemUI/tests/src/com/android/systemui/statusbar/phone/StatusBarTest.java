@@ -812,14 +812,12 @@ public class StatusBarTest extends SysuiTestCase {
 
         // By default, showKeyguardImpl sets state to KEYGUARD.
         mStatusBar.showKeyguardImpl();
-        verify(mStatusBarStateController).setState(
-                eq(StatusBarState.KEYGUARD), eq(false) /* force */);
+        verify(mStatusBarStateController).setState(eq(StatusBarState.KEYGUARD));
 
         // If useFullscreenUserSwitcher is true, state is set to FULLSCREEN_USER_SWITCHER.
         when(mUserSwitcherController.useFullscreenUserSwitcher()).thenReturn(true);
         mStatusBar.showKeyguardImpl();
-        verify(mStatusBarStateController).setState(
-                eq(StatusBarState.FULLSCREEN_USER_SWITCHER), eq(false) /* force */);
+        verify(mStatusBarStateController).setState(eq(StatusBarState.FULLSCREEN_USER_SWITCHER));
     }
 
     @Test

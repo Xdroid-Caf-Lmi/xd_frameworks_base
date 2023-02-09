@@ -1230,10 +1230,7 @@ public final class BluetoothDevice implements Parcelable {
             if (alias == null) {
                 return getName();
             }
-            return alias
-                    .replace('\t', ' ')
-                    .replace('\n', ' ')
-                    .replace('\r', ' ');
+            return alias;
         } catch (RemoteException e) {
             Log.e(TAG, "", e);
         }

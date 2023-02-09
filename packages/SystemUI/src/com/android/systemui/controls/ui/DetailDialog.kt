@@ -16,11 +16,8 @@
 
 package com.android.systemui.controls.ui
 
-import android.app.ActivityOptions
 import android.app.ActivityView
-import android.app.PendingIntent
 import android.app.Dialog
-import android.content.ComponentName
 import android.content.Intent
 import android.provider.Settings
 import android.view.View
@@ -40,8 +37,9 @@ import com.android.systemui.R
  */
 class DetailDialog(
     val cvh: ControlViewHolder,
-    val pendingIntent: PendingIntent
+    val intent: Intent
 ) : Dialog(cvh.context, R.style.Theme_SystemUI_Dialog_Control_DetailPanel) {
+
     companion object {
         private const val PANEL_TOP_OFFSET = "systemui.controls_panel_top_offset"
         /*
@@ -51,31 +49,24 @@ class DetailDialog(
         private const val EXTRA_USE_PANEL = "controls.DISPLAY_IN_PANEL"
     }
 
-    private val fillInIntent = Intent().apply {
-        putExtra(EXTRA_USE_PANEL, true)
-
-        // Apply flags to make behaviour match documentLaunchMode=always.
-        addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT)
-        addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
-    }
-
     var activityView = ActivityView(context, null, 0, false)
 
     val stateCallback: ActivityView.StateCallback = object : ActivityView.StateCallback() {
         override fun onActivityViewReady(view: ActivityView) {
-            view.startActivity(pendingIntent, fillInIntent, ActivityOptions.makeBasic())
+            val launchIntent = Intent(intent)
+            launchIntent.putExtra(EXTRA_USE_PANEL, true)
+
+            // Apply flags to make behaviour match documentLaunchMode=always.
+            launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT)
+            launchIntent.addFlags(Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
+
+            view.startActivity(launchIntent)
         }
 
         override fun onActivityViewDestroyed(view: ActivityView) {}
 
         override fun onTaskRemovalStarted(taskId: Int) {
             dismiss()
-        }
-
-        override fun onTaskCreated(taskId: Int, name: ComponentName?) {
-            requireViewById<ViewGroup>(R.id.controls_activity_view).apply {
-                setAlpha(1f)
-            }
         }
     }
 
@@ -85,7 +76,6 @@ class DetailDialog(
 
         requireViewById<ViewGroup>(R.id.controls_activity_view).apply {
             addView(activityView)
-            setAlpha(0f)
         }
 
         requireViewById<ImageView>(R.id.control_detail_close).apply {
@@ -96,7 +86,7 @@ class DetailDialog(
             setOnClickListener { v: View ->
                 dismiss()
                 context.sendBroadcast(Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS))
-                pendingIntent.send()
+                v.context.startActivity(intent)
             }
         }
 

@@ -74,6 +74,8 @@ public class DozeTriggersTest extends SysuiTestCase {
     private BroadcastDispatcher mBroadcastDispatcher;
     @Mock
     private DockManager mDockManager;
+    @Mock
+    private ProximitySensor.ProximityCheck mProximityCheck;
 
     private DozeTriggers mTriggers;
     private FakeSensorManager mSensors;
@@ -97,8 +99,8 @@ public class DozeTriggersTest extends SysuiTestCase {
         mProximitySensor = new FakeProximitySensor(thresholdSensor,  null, mExecutor);
 
         mTriggers = new DozeTriggers(mContext, mMachine, mHost, mAlarmManager, config, parameters,
-                asyncSensorManager, mExecutor, wakeLock, true,
-                mDockManager, mProximitySensor, mock(DozeLog.class), mBroadcastDispatcher);
+                asyncSensorManager, wakeLock, true, mDockManager, mProximitySensor,
+                mProximityCheck, mock(DozeLog.class), mBroadcastDispatcher);
         waitForSensorManager();
     }
 
@@ -147,6 +149,7 @@ public class DozeTriggersTest extends SysuiTestCase {
 
         clearInvocations(mSensors);
         mTriggers.transitionTo(DozeMachine.State.DOZE_PULSING, DozeMachine.State.DOZE_PULSE_DONE);
+        mTriggers.transitionTo(DozeMachine.State.DOZE_PULSE_DONE, DozeMachine.State.DOZE_AOD);
         waitForSensorManager();
         verify(mSensors).requestTriggerSensor(any(), eq(mTapSensor));
     }

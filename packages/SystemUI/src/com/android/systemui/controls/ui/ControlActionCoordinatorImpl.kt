@@ -17,7 +17,6 @@
 package com.android.systemui.controls.ui
 
 import android.app.Dialog
-import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -75,7 +74,7 @@ class ControlActionCoordinatorImpl @Inject constructor(
         bouncerOrRun(Action(cvh.cws.ci.controlId, {
             cvh.layout.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK)
             if (cvh.usePanel()) {
-                showDetail(cvh, control.getAppIntent())
+                showDialog(cvh, control.getAppIntent().getIntent())
             } else {
                 cvh.action(CommandAction(templateId))
             }
@@ -101,7 +100,7 @@ class ControlActionCoordinatorImpl @Inject constructor(
             // Long press snould only be called when there is valid control state, otherwise ignore
             cvh.cws.control?.let {
                 cvh.layout.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
-                showDetail(cvh, it.getAppIntent())
+                showDialog(cvh, it.getAppIntent().getIntent())
             }
         }, false /* blockable */))
     }
@@ -156,17 +155,17 @@ class ControlActionCoordinatorImpl @Inject constructor(
         bgExecutor.execute { vibrator.vibrate(effect) }
     }
 
-    private fun showDetail(cvh: ControlViewHolder, pendingIntent: PendingIntent) {
+    private fun showDialog(cvh: ControlViewHolder, intent: Intent) {
         bgExecutor.execute {
-            val activities: List<ResolveInfo> = context.packageManager.queryIntentActivities(
-                pendingIntent.getIntent(),
+            val activities: List<ResolveInfo> = cvh.context.packageManager.queryIntentActivities(
+                intent,
                 PackageManager.MATCH_DEFAULT_ONLY
             )
 
             uiExecutor.execute {
                 // make sure the intent is valid before attempting to open the dialog
                 if (activities.isNotEmpty()) {
-                    dialog = DetailDialog(cvh, pendingIntent).also {
+                    dialog = DetailDialog(cvh, intent).also {
                         it.setOnDismissListener { _ -> dialog = null }
                         it.show()
                     }

@@ -67,7 +67,7 @@ interface IInputMethodManager {
     void setAdditionalInputMethodSubtypes(String id, in InputMethodSubtype[] subtypes);
     // This is kept due to @UnsupportedAppUsage.
     // TODO(Bug 113914148): Consider removing this.
-    int getInputMethodWindowVisibleHeight(in IInputMethodClient client);
+    int getInputMethodWindowVisibleHeight();
 
     void reportActivityView(in IInputMethodClient parentClient, int childDisplayId,
             in float[] matrixValues);
